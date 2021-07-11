@@ -5,10 +5,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 # Set your configs
-CHROME_WEBDRIVER_PATH = 'E:/My Documents/_Collections/App/chromedriver_win32/chromedriver.exe'
+CHROME_WEBDRIVER_PATH = '/usr/local/bin/chromedriver'
 WEBDRIVER_WAIT_MS = 500
 CHECK_INTERVAL_SECONDS = 2
 
+CURRENT_PLATE = 'YOUR_PLATE_NUMBER'
+VIN = 'YOUR_VIN_LAST_3_DIGITS'
 PLATE_NUMBER_LIST_PATH = 'plate_numbers.txt'
 ACKNOWLEDGE_URL = 'https://www.dmv.ca.gov/wasapp/ipp2/initPers.do'
 PLATE_MAX_LEN = 7
@@ -20,6 +22,7 @@ def load_plate_number_list(path):
   f = open(path,'r')
   for line in f.readlines():
     line = line.replace('\n', '')
+    line = "{:<7}".format(line)
     plate_number_list.append(line)
   return plate_number_list
 
@@ -38,24 +41,36 @@ def convert_plate_number(string):
 
 def is_available_plate_number(driver, plate_number):
   driver.get(ACKNOWLEDGE_URL)
-  WebDriverWait(driver, WEBDRIVER_WAIT_MS).until(EC.presence_of_element_located((By.NAME, 'method')))
-  driver.find_element_by_id('agree').click()
-  driver.find_element_by_name('method').click()
+  WebDriverWait(driver, WEBDRIVER_WAIT_MS).until(EC.presence_of_element_located((By.XPATH, '//*[@id="PersonalizedFormBean"]/div[1]/fieldset/ul/li/label')))
+  driver.find_element_by_xpath('//*[@id="PersonalizedFormBean"]/div[1]/fieldset/ul/li/label').click()
+  driver.find_element_by_xpath('//*[@id="PersonalizedFormBean"]/div[2]/button').click()
+  # driver.find_element_by_name('method').click()
 
   WebDriverWait(driver, WEBDRIVER_WAIT_MS).until(EC.presence_of_element_located((By.NAME, 'plateType')))
   driver.find_element_by_id('vehicleType').send_keys('Auto')
-  driver.find_element_by_id('isVehLeasedN').click()
-  driver.find_element_by_name('plateType').click()
-  driver.find_elements_by_tag_name('input')[20].click()
+  driver.find_element_by_id('licPlateReplaced').send_keys(CURRENT_PLATE)
+  driver.find_element_by_id('last3Vin').send_keys(VIN)
+
+  # driver.find_element_by_id('isRegExpire60N').click()
+  driver.find_element_by_xpath('//*[@id="PersonalizedFormBean"]/fieldset/div[5]/div[2]/label').click()
+  driver.find_element_by_xpath('//*[@id="PersonalizedFormBean"]/fieldset/div[6]/div[2]/label').click()
+
+  driver.find_element_by_xpath('//*[@id="PersonalizedFormBean"]/fieldset/div[6]/div[2]/label').click()
+
+  driver.find_element_by_xpath('//*[@id="plate_R"]/div/div/label').click()
+  driver.find_element_by_xpath('//*[@id="PersonalizedFormBean"]/div/button').click()
+
 
   WebDriverWait(driver, WEBDRIVER_WAIT_MS).until(EC.presence_of_element_located((By.NAME, 'plateChar6')))
   for i in range(len(plate_number)):
     driver.find_element_by_name('plateChar%d' % i).send_keys(plate_number[i])
-  driver.find_elements_by_tag_name('input')[10].click()
+  # driver.find_elements_by_tag_name('input')[10].click()
+  
+  driver.find_element_by_xpath('//*[@id="plate-configurator"]/div[2]/button').click()
 
   WebDriverWait(driver, WEBDRIVER_WAIT_MS).until(EC.presence_of_element_located((By.ID, 'footer')))
-  element_step = driver.find_element_by_tag_name('legend')
-  return 'Step 3: Complete Order Form' in element_step.text
+  list = driver.find_elements_by_id('meaning')
+  return len(list) > 0
 
 
 if __name__ == "__main__":
