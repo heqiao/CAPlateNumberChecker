@@ -3,8 +3,8 @@ A script for checking the availability of CA special interest license plate numb
 
 ## Requirements
 * python 3+
-* selenium
-* [ChromeDriver](http://chromedriver.chromium.org/)
+* [selenium](https://pypi.org/project/selenium/)
+* [webdriver-manager](https://pypi.org/project/webdriver-manager/)
 
 ## How to use
 1. Edit `plate_numbers.txt`. Put the numbers you want to check into the file.
